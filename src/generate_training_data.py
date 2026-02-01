@@ -66,7 +66,7 @@ def generate_prompt_matrix_sum_reverse(b, max_len, min_num_digits=1, max_num_dig
 
 # copy
 
-def generate_prompt_matrix_copy(b, max_len, min_num_digits=1, max_num_digits=10):
+def generate_prompt_matrix_copy(b, max_len, min_num_digits=1, max_num_digits=10, prob_one=0.5):
     # Generate a batch of random positive integers
     batch_num_digits = np.random.randint(min_num_digits, max_num_digits, size=(b, 1))
     
@@ -78,7 +78,11 @@ def generate_prompt_matrix_copy(b, max_len, min_num_digits=1, max_num_digits=10)
     y_matrix = np.full((b, 2*max_len), 3)
     mask = np.full((b,2*max_len), 0)
     for i in range(b):
-        prompt_matrix[i, :num_digits[i]] = np.random.randint(low=0, high=2, size=num_digits[i])
+        prompt_matrix[i, :num_digits[i]] = np.random.choice(
+            [0, 1],
+            size=num_digits[i],
+            p=[1.0 - prob_one, prob_one],
+        )
         prompt_matrix[i, num_digits[i]] = 2
 
         y_matrix[i, :(num_digits[i])] = 4

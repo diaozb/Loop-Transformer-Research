@@ -18,7 +18,7 @@ training:
             start: 2
             end: 20
             inc: 1
-            interval: 1600
+            interval: 2500
 
 out_dir: ../models/addition
 test_run: False

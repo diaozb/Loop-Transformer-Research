@@ -1,5 +1,5 @@
 wandb:
     project: looped-tf
-    entity: your-entity
+    entity: fdulyz-fudan-university-school-of-management
     notes: ""
     log_every_steps: 1000
