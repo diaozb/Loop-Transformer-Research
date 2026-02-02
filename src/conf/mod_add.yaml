@@ -1,0 +1,27 @@
+inherit: 
+    - models/mod_add.yaml
+    - wandb.yaml
+
+model:
+    n_dims: 13
+    n_positions: 4096
+    linear_embedding: True
+
+training:
+    task: mod_add
+    modulus: 11
+    test_len: 30
+    batch_size: 64
+    learning_rate: 0.0001
+    train_steps: 100001
+    curriculum:
+        points:
+            start: 2
+            end: 20
+            inc: 1
+            interval: 2500
+
+out_dir: ../models/mod_add
+test_run: False
+wandb:
+    name: "mod_add"

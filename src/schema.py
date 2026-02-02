@@ -36,13 +36,14 @@ curriculum_schema = {
 }
 
 training_schema = {
-    "task": merge(tstring, allowed(["parity", "sum_reverse", "copy", "dict", "multi", "addition"]), default("parity")),
+    "task": merge(tstring, allowed(["parity", "sum_reverse", "copy", "dict", "multi", "addition", "mod_add"]), default("parity")),
     "batch_size": merge(tinteger, default(64)),
     "test_len": merge(tinteger, default(10)),
     "learning_rate": merge(tfloat, default(3e-4)),
     "train_steps": merge(tinteger, default(1000)),
     "curriculum": stdict(curriculum_schema),
     "ema": merge(tboolean, default(False)),
+    "modulus": merge(tinteger, default(11)),
 }
 
 wandb_schema = {

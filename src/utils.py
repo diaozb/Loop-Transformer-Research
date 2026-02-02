@@ -1,9 +1,9 @@
 import numpy as np
 
-def convert_to_one_hot(int_matrix):
+def convert_to_one_hot(int_matrix, n_dims=6):
     batch_size, seq_len = int_matrix.shape
     # Create a 3D tensor filled with zeros
-    one_hot_tensor = np.zeros((batch_size, seq_len, 6), dtype=np.float32)
+    one_hot_tensor = np.zeros((batch_size, seq_len, n_dims), dtype=np.float32)
     
     # Iterate over the 2D matrix and set the corresponding one-hot values
     for batch_idx in range(batch_size):

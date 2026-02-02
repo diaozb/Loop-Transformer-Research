@@ -227,3 +227,25 @@ def generate_prompt_matrix_dict(b, max_len, min_num_digits=1, max_num_digits=10)
         mask[i, (num_digits[i]):]=1
 
     return torch.tensor(prompt_matrix), torch.tensor(batch_num_digits), torch.tensor(y_matrix), torch.tensor(mask)
+
+# mod add (k-ary sum mod p)
+
+def generate_prompt_matrix_mod_add(b, max_len, min_num_digits=1, max_num_digits=10, modulus=11):
+    # Generate a batch of random positive integers (as tokens 0..modulus-1)
+    batch_num_digits = np.random.randint(min_num_digits, max_num_digits, size=(b, 1))
+    num_digits = batch_num_digits.flatten()
+
+    pad_token = modulus
+    ignore_token = modulus + 1
+
+    prompt_matrix = np.full((b, max_len), pad_token)
+    y_matrix = np.full((b, max_len), pad_token)
+    mask = np.full((b, max_len), 0)
+
+    for i in range(b):
+        prompt_matrix[i, :num_digits[i]] = np.random.randint(low=0, high=modulus, size=num_digits[i])
+        y_matrix[i, :num_digits[i]] = ignore_token
+        y_matrix[i, num_digits[i]] = np.sum(prompt_matrix[i, :num_digits[i]]) % modulus
+        mask[i, num_digits[i]:] = 1
+
+    return torch.tensor(prompt_matrix), torch.tensor(batch_num_digits), torch.tensor(y_matrix), torch.tensor(mask)
