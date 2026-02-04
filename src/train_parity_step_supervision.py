@@ -31,6 +31,7 @@ def train(model, args):
     bsize = args.training.batch_size
     pbar = tqdm(range(starting_step, args.training.train_steps))
     loss_func = nn.CrossEntropyLoss()
+    best_acc = float("-inf")
 
     for i in pbar:
         xs_int, batch_num, ys, mask = generate_prompt_matrix_parity(
@@ -161,6 +162,9 @@ def train(model, args):
                 },
                 step=i,
             )
+            if test_acc >= best_acc:
+                best_acc = test_acc
+                torch.save(model, os.path.join(args.out_dir, "best.pt"))
         curriculum.update()
         pbar.set_description(f"loss {loss}")
 
@@ -208,6 +212,9 @@ def train(model, args):
         )
         print("test_acc_final = ", test_acc_final)
         print("test_acc_chosen_final = ", test_acc_chosen_final)
+    if test_acc_final >= best_acc:
+        best_acc = test_acc_final
+        torch.save(model, os.path.join(args.out_dir, "best.pt"))
     wandb.log(
         {
             "test_acc_final": test_acc_final,
@@ -254,7 +261,12 @@ if __name__ == "__main__":
     if not args.test_run:
         run_id = f"{uuid.uuid4()}_substep"
 
-        out_dir = os.path.join(args.out_dir, run_id)
+        out_dir = args.out_dir
+        if args.model.use_wpe:
+            out_dir = os.path.join(out_dir, "wpe")
+        if args.model.use_rope:
+            out_dir = os.path.join(out_dir, "rope")
+        out_dir = os.path.join(out_dir, run_id)
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
         args.out_dir = out_dir

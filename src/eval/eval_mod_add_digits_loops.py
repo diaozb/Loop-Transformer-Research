@@ -16,7 +16,7 @@ SRC_DIR = os.path.dirname(CURRENT_DIR)
 if SRC_DIR not in sys.path:
     sys.path.append(SRC_DIR)
 
-from generate_training_data import generate_prompt_matrix_copy
+from generate_training_data import generate_prompt_matrix_mod_add_digits
 from utils import convert_to_one_hot
 
 
@@ -47,14 +47,14 @@ def _batch_metrics(
     ys: torch.Tensor,
     mask: torch.Tensor,
     loop_counts: List[int],
+    pad_token: int,
 ):
     """Compute metrics for a single batch across loop counts."""
     results = {lc: {} for lc in loop_counts}
     mask_bool = mask == 1
-    answer_mask = mask_bool & (ys != 3)
+    answer_mask = mask_bool & (ys != pad_token)
     batch_size = ys.shape[0]
 
-    # Precompute predictions per loop for change rate.
     preds_per_loop = {}
     for lc in loop_counts:
         logits = logits_list[lc - 1]
@@ -65,17 +65,12 @@ def _batch_metrics(
         logits = logits_list[lc - 1]
 
         preds = preds_per_loop[lc]
-        correct_tokens = (preds == ys) & mask_bool
-        total_tokens = mask_bool.sum().item()
-        token_acc = (correct_tokens.sum().item() / total_tokens) if total_tokens > 0 else 0.0
-
-        correct_seq = (preds[mask_bool] == ys[mask_bool]).view(batch_size, -1).all(dim=1)
-        acc = correct_seq.float().mean().item()
+        correct = (preds[mask_bool] == ys[mask_bool]).view(batch_size, -1).all(dim=1)
+        acc = correct.float().mean().item()
 
         correct_answer = (preds[answer_mask] == ys[answer_mask]).view(batch_size, -1).all(dim=1)
         answer_acc = correct_answer.float().mean().item()
 
-        # L2 norm of hidden delta vs previous loop.
         if idx == 0:
             delta_l2_all = float("nan")
             delta_l2_mask = float("nan")
@@ -86,7 +81,6 @@ def _batch_metrics(
             delta_mask = hidden[mask_bool] - prev_hidden[mask_bool]
             delta_l2_mask = torch.linalg.norm(delta_mask, dim=-1).mean().item()
 
-        # Cosine similarity to previous loop.
         if idx == 0:
             cos_all = float("nan")
             cos_mask = float("nan")
@@ -95,12 +89,10 @@ def _batch_metrics(
             cos_all = F.cosine_similarity(hidden, prev_hidden, dim=-1).mean().item()
             cos_mask = F.cosine_similarity(hidden[mask_bool], prev_hidden[mask_bool], dim=-1).mean().item()
 
-        # Entropy of output distribution on masked positions.
         logits_mask = logits[mask_bool]
         probs = F.softmax(logits_mask, dim=-1)
         entropy = (-probs * torch.log(probs + 1e-9)).sum(dim=-1).mean().item()
 
-        # Answer change rate vs previous loop (sample-level).
         if idx == 0:
             change_rate = float("nan")
         else:
@@ -111,21 +103,19 @@ def _batch_metrics(
         results[lc] = {
             "accuracy": acc,
             "answer_accuracy": answer_acc,
-            "token_accuracy": token_acc,
             "delta_l2_norm_all": delta_l2_all,
             "delta_l2_norm_mask": delta_l2_mask,
             "cosine_to_prev_all": cos_all,
             "cosine_to_prev_mask": cos_mask,
             "entropy_mask": entropy,
             "answer_change_rate": change_rate,
-            "token_count": total_tokens,
         }
 
     return results
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Evaluate copy model across lengths and loop counts.")
+    parser = argparse.ArgumentParser(description="Evaluate mod_add_digits model across lengths and loop counts.")
     parser.add_argument(
         "--checkpoint",
         type=str,
@@ -136,7 +126,7 @@ def main():
         "--lengths",
         type=str,
         default="4,8,16,32,40",
-        help="Comma-separated copy lengths (number of digits).",
+        help="Comma-separated digit lengths (number of digits per addend).",
     )
     parser.add_argument(
         "--loop_counts",
@@ -157,22 +147,22 @@ def main():
         help="Batch size used during evaluation.",
     )
     parser.add_argument(
-        "--prob_one",
-        type=float,
-        default=0.5,
-        help="Probability of generating token 1 in copy input (token 0 uses 1-prob_one).",
+        "--modulus",
+        type=int,
+        default=107,
+        help="Modulus for mod_add_digits task.",
     )
     parser.add_argument(
         "--run_name",
         type=str,
         default=None,
-        help="Optional run name for output directory (subfolder under eval/copy/<checkpoint_name>/).",
+        help="Optional run name for output directory (subfolder under eval/mod_add_digits/<checkpoint_name>/).",
     )
     parser.add_argument(
         "--output_dir",
         type=str,
         default=None,
-        help="Optional full output directory. If set, overrides the default eval/copy/<checkpoint_name>/<run_name>.",
+        help="Optional full output directory. If set, overrides the default eval/mod_add_digits/<checkpoint_name>/<run_name>.",
     )
     parser.add_argument("--device", type=str, default="cuda", help="Device to run evaluation on.")
     args = parser.parse_args()
@@ -200,12 +190,12 @@ def main():
                 "loop_counts": loop_counts,
                 "num_samples": args.num_samples,
                 "batch_size": args.batch_size,
-                "prob_one": args.prob_one,
+                "modulus": args.modulus,
             }
             run_hash = sha1(json.dumps(run_payload, sort_keys=True).encode("utf-8")).hexdigest()[:8]
             run_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             run_name = f"{run_stamp}_{run_hash}"
-        output_dir = os.path.join(repo_root, "eval", "copy", checkpoint_name, run_name)
+        output_dir = os.path.join(repo_root, "eval", "mod_add_digits", checkpoint_name, run_name)
     os.makedirs(output_dir, exist_ok=True)
 
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
@@ -214,13 +204,13 @@ def main():
     model.to(device)
 
     linear_embedding = hasattr(model, "_read_in") and isinstance(model._read_in, torch.nn.Linear)
+    result_len = len(str(args.modulus - 1))
 
     results: Dict[int, Dict[int, Dict[str, float]]] = {}
     for length in lengths:
         metrics_sum = {lc: {k: 0.0 for k in (
             "accuracy",
             "answer_accuracy",
-            "token_accuracy",
             "delta_l2_norm_all",
             "delta_l2_norm_mask",
             "cosine_to_prev_all",
@@ -229,51 +219,43 @@ def main():
             "answer_change_rate",
         )} for lc in loop_counts}
         metrics_count = {lc: 0 for lc in loop_counts}
-        token_correct_sum = {lc: 0.0 for lc in loop_counts}
-        token_count_sum = {lc: 0.0 for lc in loop_counts}
 
         num_done = 0
         while num_done < args.num_samples:
             b = min(args.batch_size, args.num_samples - num_done)
-            xs, batch_num, ys, mask = generate_prompt_matrix_copy(
+            max_len_needed = 2 * length + 2 + result_len
+            xs, batch_num, ys, mask = generate_prompt_matrix_mod_add_digits(
                 b,
-                max_len=length + 1,
+                max_len=max_len_needed,
                 min_num_digits=length,
                 max_num_digits=length + 1,
-                prob_one=args.prob_one,
+                modulus=args.modulus,
             )
             ys = ys.to(device)
             mask = mask.to(device)
 
             if linear_embedding:
-                xs = torch.tensor(convert_to_one_hot(xs.numpy()), dtype=torch.float32, device=device)
+                xs = torch.tensor(convert_to_one_hot(xs.numpy(), n_dims=14), dtype=torch.float32, device=device)
             else:
                 xs = xs.to(device)
 
             with torch.no_grad():
                 hidden_list, logits_list = _looped_forward_collect(model, xs, horizon)
-                batch_metrics = _batch_metrics(hidden_list, logits_list, ys, mask, loop_counts)
+                batch_metrics = _batch_metrics(hidden_list, logits_list, ys, mask, loop_counts, pad_token=12)
 
             for lc in loop_counts:
                 for k, v in batch_metrics[lc].items():
-                    if k == "token_count":
-                        continue
                     metrics_sum[lc][k] += v * b
                 metrics_count[lc] += b
-                token_count_sum[lc] += batch_metrics[lc]["token_count"]
-                token_correct_sum[lc] += batch_metrics[lc]["token_accuracy"] * batch_metrics[lc]["token_count"]
 
             num_done += b
 
         results[length] = {}
         for lc in loop_counts:
             denom = max(1, metrics_count[lc])
-            token_denom = max(1.0, token_count_sum[lc])
             results[length][lc] = {k: metrics_sum[lc][k] / denom for k in metrics_sum[lc]}
-            results[length][lc]["token_accuracy"] = token_correct_sum[lc] / token_denom
 
-    # Save JSON
-    json_path = os.path.join(output_dir, "copy_eval_results.json")
+    json_path = os.path.join(output_dir, "mod_add_digits_eval_results.json")
     with open(json_path, "w") as f:
         json.dump(
             {
@@ -283,22 +265,20 @@ def main():
                 "loop_counts": loop_counts,
                 "num_samples": args.num_samples,
                 "batch_size": args.batch_size,
-                "prob_one": args.prob_one,
+                "modulus": args.modulus,
                 "results": results,
             },
             f,
             indent=2,
         )
 
-    # Save CSV
-    csv_path = os.path.join(output_dir, "copy_eval_results.csv")
+    csv_path = os.path.join(output_dir, "mod_add_digits_eval_results.csv")
     with open(csv_path, "w") as f:
         headers = [
             "length",
             "loop",
             "accuracy",
             "answer_accuracy",
-            "token_accuracy",
             "delta_l2_norm_all",
             "delta_l2_norm_mask",
             "cosine_to_prev_all",
@@ -314,7 +294,6 @@ def main():
                     f"{length},{lc},"
                     f"{row['accuracy']:.6f},"
                     f"{row['answer_accuracy']:.6f},"
-                    f"{row['token_accuracy']:.6f},"
                     f"{row['delta_l2_norm_all']:.6f},"
                     f"{row['delta_l2_norm_mask']:.6f},"
                     f"{row['cosine_to_prev_all']:.6f},"
@@ -323,12 +302,11 @@ def main():
                     f"{row['answer_change_rate']:.6f}\n"
                 )
 
-    # Plots
     import matplotlib.pyplot as plt
 
     metric_keys = [
         "accuracy",
-        "token_accuracy",
+        "answer_accuracy",
         "delta_l2_norm_all",
         "delta_l2_norm_mask",
         "cosine_to_prev_all",
@@ -337,28 +315,7 @@ def main():
         "answer_change_rate",
     ]
 
-    heatmap_metric_keys = metric_keys + ["answer_accuracy"]
-
     for metric in metric_keys:
-        plt.figure(figsize=(7, 4))
-        if metric in ("delta_l2_norm_all", "delta_l2_norm_mask", "cosine_to_prev_all", "cosine_to_prev_mask", "answer_change_rate"):
-            plot_loops = loop_counts[1:]
-        else:
-            plot_loops = loop_counts
-        for length in lengths:
-            ys_plot = [results[length][lc][metric] for lc in plot_loops]
-            plt.plot(plot_loops, ys_plot, marker="o", label=f"L={length}")
-        plt.xlabel("Loop count")
-        plt.ylabel(metric.replace("_", " "))
-        plt.title(f"{metric.replace('_', ' ').title()} vs Loop Count")
-        plt.legend()
-        plt.tight_layout()
-        out_path = os.path.join(output_dir, f"{metric}_vs_loop.png")
-        plt.savefig(out_path, dpi=200)
-        plt.close()
-
-    # Heatmaps for all metrics (length x loop)
-    for metric in heatmap_metric_keys:
         if metric in ("delta_l2_norm_all", "delta_l2_norm_mask", "cosine_to_prev_all", "cosine_to_prev_mask", "answer_change_rate"):
             heatmap_loops = loop_counts[1:]
         else:

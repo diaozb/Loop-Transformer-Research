@@ -249,3 +249,41 @@ def generate_prompt_matrix_mod_add(b, max_len, min_num_digits=1, max_num_digits=
         mask[i, num_digits[i]:] = 1
 
     return torch.tensor(prompt_matrix), torch.tensor(batch_num_digits), torch.tensor(y_matrix), torch.tensor(mask)
+
+# mod add digits (two numbers with decimal digits, plus/equal tokens)
+
+def generate_prompt_matrix_mod_add_digits(b, max_len, min_num_digits=1, max_num_digits=10, modulus=11):
+    batch_num_digits = np.random.randint(min_num_digits, max_num_digits, size=(b, 1))
+    num_digits = batch_num_digits.flatten()
+
+    plus_token = 10
+    equal_token = 11
+    pad_token = 12
+    ignore_token = 13
+
+    result_len = len(str(modulus - 1))
+
+    prompt_matrix = np.full((b, max_len), pad_token)
+    y_matrix = np.full((b, max_len), pad_token)
+    mask = np.full((b, max_len), 0)
+
+    for i in range(b):
+        L = num_digits[i]
+        a_digits = np.random.randint(low=0, high=10, size=L)
+        b_digits = np.random.randint(low=0, high=10, size=L)
+        prompt_matrix[i, :L] = a_digits
+        prompt_matrix[i, L] = plus_token
+        prompt_matrix[i, (L + 1):(2 * L + 1)] = b_digits
+        prompt_matrix[i, 2 * L + 1] = equal_token
+
+        y_matrix[i, :2 * L + 1] = ignore_token
+
+        a_val = int("".join(str(x) for x in a_digits))
+        b_val = int("".join(str(x) for x in b_digits))
+        result_val = (a_val + b_val) % modulus
+        result_digits = [int(x) for x in f"{result_val:0{result_len}d}"]
+
+        y_matrix[i, (2 * L + 1):(2 * L + 1 + result_len)] = np.array(result_digits)
+        mask[i, (2 * L + 1):] = 1
+
+    return torch.tensor(prompt_matrix), torch.tensor(batch_num_digits), torch.tensor(y_matrix), torch.tensor(mask)

@@ -22,6 +22,9 @@ model_schema = {
     "n_layer": merge(tinteger, required),
     "n_head": merge(tinteger, required),
     "linear_embedding": merge(tboolean, default(False)),
+    "use_wpe": merge(tboolean, default(False)),
+    "use_rope": merge(tboolean, default(False)),
+    "rope_theta": merge(tfloat, default(10000.0)),
 }
 
 curriculum_base_schema = {
@@ -36,7 +39,7 @@ curriculum_schema = {
 }
 
 training_schema = {
-    "task": merge(tstring, allowed(["parity", "sum_reverse", "copy", "dict", "multi", "addition", "mod_add"]), default("parity")),
+    "task": merge(tstring, allowed(["parity", "sum_reverse", "copy", "dict", "multi", "addition", "mod_add", "mod_add_digits"]), default("parity")),
     "batch_size": merge(tinteger, default(64)),
     "test_len": merge(tinteger, default(10)),
     "learning_rate": merge(tfloat, default(3e-4)),

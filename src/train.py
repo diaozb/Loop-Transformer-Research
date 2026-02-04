@@ -13,7 +13,7 @@ from models import build_general_model
 import wandb
 from utils import convert_to_one_hot, one_hot_to_int, exact_match_accuracy
 from torch_ema import ExponentialMovingAverage
-from generate_training_data import generate_prompt_matrix_parity, generate_prompt_matrix_copy, generate_prompt_matrix_addition, generate_prompt_matrix_multi, generate_prompt_matrix_sum_reverse, generate_prompt_matrix_dict, generate_prompt_matrix_mod_add
+from generate_training_data import generate_prompt_matrix_parity, generate_prompt_matrix_copy, generate_prompt_matrix_addition, generate_prompt_matrix_multi, generate_prompt_matrix_sum_reverse, generate_prompt_matrix_dict, generate_prompt_matrix_mod_add, generate_prompt_matrix_mod_add_digits
 from test_func import test_model, test_model_adaptive, test_model_multi, test_model_multi_adaptive, test_model_dict, test_model_dict_adaptive
 
 generate_function_map = {
@@ -23,7 +23,8 @@ generate_function_map = {
     "multi": generate_prompt_matrix_multi,
     "sum_reverse": generate_prompt_matrix_sum_reverse,
     "dict": generate_prompt_matrix_dict,
-    "mod_add": generate_prompt_matrix_mod_add
+    "mod_add": generate_prompt_matrix_mod_add,
+    "mod_add_digits": generate_prompt_matrix_mod_add_digits
     }
 
 test_function_map = {
@@ -33,7 +34,8 @@ test_function_map = {
     "multi": test_model_multi,
     "sum_reverse": test_model,
     "dict": test_model_dict,
-    "mod_add": test_model
+    "mod_add": test_model,
+    "mod_add_digits": test_model
     }
 
 test_function_map_adaptive = {
@@ -43,7 +45,8 @@ test_function_map_adaptive = {
     "multi": test_model_multi_adaptive,
     "sum_reverse": test_model_adaptive,
     "dict": test_model_dict_adaptive,
-    "mod_add": test_model_adaptive
+    "mod_add": test_model_adaptive,
+    "mod_add_digits": test_model_adaptive
     }
 
 def train(model, args):
@@ -56,6 +59,7 @@ def train(model, args):
     bsize = args.training.batch_size
     pbar = tqdm(range(starting_step, args.training.train_steps))
     loss_func = nn.CrossEntropyLoss()
+    best_acc = float("-inf")
     for i in pbar:   
         if args.training.task != "multi":
             # multiplication task needs two lengths
@@ -67,13 +71,21 @@ def train(model, args):
                     max_len=curriculum.n_points + 1,
                     modulus=args.training.modulus,
                 )
+            elif args.training.task == "mod_add_digits":
+                xs, batch_num, ys, mask = generate_prompt_matrix_mod_add_digits(
+                    bsize,
+                    min_num_digits=1,
+                    max_num_digits=curriculum.n_points,
+                    max_len=3 * (curriculum.n_points + 1),
+                    modulus=args.training.modulus,
+                )
             else:
                 xs, batch_num, ys, mask = generate_function_map[args.training.task](bsize, min_num_digits = 1, max_num_digits = curriculum.n_points, max_len = curriculum.n_points+1)
         else:
             xs, batch_num, batch_num_1, ys, mask = generate_prompt_matrix_multi(bsize, min_num_digits = 1, max_num_digits = curriculum.n_points, max_len = curriculum.n_points+1)
         #  since max_num_digits is unincliusive, the actual max number of digits is curriculum.n_points - 1
         if args.training.task != "dict":
-            if args.training.task == "mod_add":
+            if args.training.task in ("mod_add", "mod_add_digits"):
                 xs = torch.tensor(convert_to_one_hot(xs, n_dims=args.model.n_dims))
             else:
                 xs = torch.tensor(convert_to_one_hot(xs))
@@ -123,11 +135,24 @@ def train(model, args):
         if (i) % 1000 == 0:
             print("current max training length = ", curriculum.n_points-1)
             converter = convert_to_one_hot
-            if args.training.task == "mod_add":
+            if args.training.task in ("mod_add", "mod_add_digits"):
                 converter = lambda arr: convert_to_one_hot(arr, n_dims=args.model.n_dims)
             test_generate = generate_function_map[args.training.task]
             if args.training.task == "mod_add":
                 test_generate = lambda *a, **k: generate_prompt_matrix_mod_add(*a, **k, modulus=args.training.modulus)
+            elif args.training.task == "mod_add_digits":
+                def _test_generate_mod_add_digits(b, max_len, min_num_digits, max_num_digits):
+                    result_len = len(str(args.training.modulus - 1))
+                    L = max_num_digits - 1
+                    needed = 2 * L + 2 + result_len
+                    return generate_prompt_matrix_mod_add_digits(
+                        b,
+                        max_len=needed,
+                        min_num_digits=min_num_digits,
+                        max_num_digits=max_num_digits,
+                        modulus=args.training.modulus,
+                    )
+                test_generate = _test_generate_mod_add_digits
             test_acc_current = test_function_map[args.training.task](model, curriculum.n_points-1, 512, test_generate, converter, one_hot_to_int, exact_match_accuracy)
             test_acc_chosen_current, _ = test_function_map_adaptive[args.training.task](model, curriculum.n_points-1, 512, test_generate, converter, one_hot_to_int, exact_match_accuracy)
             print("test_acc_current = ", test_acc_current)
@@ -147,16 +172,32 @@ def train(model, args):
                 },
                 step=i,
             )
+            if test_acc >= best_acc:
+                best_acc = test_acc
+                torch.save(model, os.path.join(args.out_dir, "best.pt"))
         curriculum.update()
         pbar.set_description(f"loss {loss}")
 
     # test after training
     converter = convert_to_one_hot
-    if args.training.task == "mod_add":
+    if args.training.task in ("mod_add", "mod_add_digits"):
         converter = lambda arr: convert_to_one_hot(arr, n_dims=args.model.n_dims)
     test_generate = generate_function_map[args.training.task]
     if args.training.task == "mod_add":
         test_generate = lambda *a, **k: generate_prompt_matrix_mod_add(*a, **k, modulus=args.training.modulus)
+    elif args.training.task == "mod_add_digits":
+        def _test_generate_mod_add_digits(b, max_len, min_num_digits, max_num_digits):
+            result_len = len(str(args.training.modulus - 1))
+            L = max_num_digits - 1
+            needed = 2 * L + 2 + result_len
+            return generate_prompt_matrix_mod_add_digits(
+                b,
+                max_len=needed,
+                min_num_digits=min_num_digits,
+                max_num_digits=max_num_digits,
+                modulus=args.training.modulus,
+            )
+        test_generate = _test_generate_mod_add_digits
 
     if args.training.ema:
         with ema.average_parameters():
@@ -169,6 +210,9 @@ def train(model, args):
         test_acc_chosen_final, _ = test_function_map_adaptive[args.training.task](model, test_len, 6400, test_generate, converter, one_hot_to_int, exact_match_accuracy)
         print("test_acc_final = ", test_acc_final)
         print("test_acc_chosen_final = ", test_acc_chosen_final)
+    if test_acc_final >= best_acc:
+        best_acc = test_acc_final
+        torch.save(model, os.path.join(args.out_dir, "best.pt"))
     wandb.log(
         {
             "test_acc_final": test_acc_final,
@@ -213,8 +257,12 @@ if __name__ == "__main__":
         run_id = str(uuid.uuid4())
 
         out_dir = args.out_dir
-        if args.training.task == "mod_add":
+        if args.training.task in ("mod_add", "mod_add_digits"):
             out_dir = os.path.join(out_dir, f"mod_{args.training.modulus}")
+        if args.model.use_wpe:
+            out_dir = os.path.join(out_dir, "wpe")
+        if args.model.use_rope:
+            out_dir = os.path.join(out_dir, "rope")
         out_dir = os.path.join(out_dir, run_id)
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)

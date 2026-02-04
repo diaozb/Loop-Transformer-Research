@@ -1,28 +1,27 @@
 inherit: 
-    - models/copy.yaml
+    - models/mod_add_digits.yaml
     - wandb.yaml
 
 model:
-    n_dims: 6
+    n_dims: 14
     n_positions: 4096
     linear_embedding: True
-    use_wpe: False
-    use_rope: True
 
 training:
-    task: copy
-    test_len : 30
-    batch_size: 64
+    task: mod_add_digits
+    modulus: 107
+    test_len: 10
+    batch_size: 128
     learning_rate: 0.0001
     train_steps: 100001
     curriculum:
         points:
             start: 2
-            end: 20
+            end: 5
             inc: 1
-            interval: 1000
+            interval: 5000
 
-out_dir: ../models/copy
+out_dir: ../models/mod_add_digits
 test_run: False
 wandb:
-    name: "copy"
+    name: "mod_add_digits"

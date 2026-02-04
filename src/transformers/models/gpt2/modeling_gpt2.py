@@ -135,6 +135,7 @@ def load_tf_weights_in_gpt2(model, config, gpt2_checkpoint_path):
 class GPT2Attention(nn.Module):
     def __init__(self, config, is_cross_attention=False, layer_idx=None, causal = True):
         super().__init__()
+        self.config = config
 
         max_positions = config.max_position_embeddings
         self.register_buffer(
@@ -295,6 +296,33 @@ class GPT2Attention(nn.Module):
         new_shape = tensor.size()[:-2] + (num_heads * attn_head_size,)
         return tensor.view(new_shape)
 
+    def _rope_cache(self, seq_len, device, dtype):
+        theta = float(getattr(self.config, "rope_theta", 10000.0))
+        dim = self.head_dim
+        inv_freq = 1.0 / (theta ** (torch.arange(0, dim, 2, device=device, dtype=dtype) / dim))
+        positions = torch.arange(seq_len, device=device, dtype=dtype)
+        freqs = torch.einsum("i,j->ij", positions, inv_freq)
+        emb = torch.cat([freqs, freqs], dim=-1)
+        cos = emb.cos()[None, None, :, :]
+        sin = emb.sin()[None, None, :, :]
+        return cos, sin
+
+    def _apply_rope(self, query, key):
+        q_len = query.size(-2)
+        k_len = key.size(-2)
+        cos, sin = self._rope_cache(k_len, query.device, query.dtype)
+        cos_q = cos[..., -q_len:, :]
+        sin_q = sin[..., -q_len:, :]
+
+        def rotate_half(x):
+            x1 = x[..., ::2]
+            x2 = x[..., 1::2]
+            return torch.stack((-x2, x1), dim=-1).reshape_as(x)
+
+        query = (query * cos_q) + (rotate_half(query) * sin_q)
+        key = (key * cos) + (rotate_half(key) * sin)
+        return query, key
+
     def forward(
         self,
         hidden_states,
@@ -327,6 +355,9 @@ class GPT2Attention(nn.Module):
             past_key, past_value = layer_past
             key = torch.cat((past_key, key), dim=-2)
             value = torch.cat((past_value, value), dim=-2)
+
+        if getattr(self.config, "use_rope", False):
+            query, key = self._apply_rope(query, key)
 
         if use_cache is True:
             present = (key, value)
