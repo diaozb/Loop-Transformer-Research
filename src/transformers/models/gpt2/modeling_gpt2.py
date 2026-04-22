@@ -356,7 +356,9 @@ class GPT2Attention(nn.Module):
             key = torch.cat((past_key, key), dim=-2)
             value = torch.cat((past_value, value), dim=-2)
 
-        if getattr(self.config, "use_rope", False):
+        config = getattr(self, "config", None)
+        use_rope = getattr(config, "use_rope", False) if config is not None else False
+        if use_rope:
             query, key = self._apply_rope(query, key)
 
         if use_cache is True:

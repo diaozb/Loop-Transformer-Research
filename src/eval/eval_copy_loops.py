@@ -25,7 +25,21 @@ def _parse_int_list(raw: str) -> List[int]:
     return [int(x) for x in items]
 
 
-def _looped_forward_collect(model, xs: torch.Tensor, horizon: int):
+def _sample_batch_permutations(
+    batch_size: int, seq_len: int, device: torch.device, rng: np.random.Generator
+) -> torch.Tensor:
+    perms = np.stack([rng.permutation(seq_len) for _ in range(batch_size)], axis=0)
+    return torch.tensor(perms, dtype=torch.long, device=device)
+
+
+def _looped_forward_collect(
+    model,
+    xs: torch.Tensor,
+    horizon: int,
+    ape_perm_mode: str = "none",
+    fixed_position_ids: torch.Tensor = None,
+    rng: np.random.Generator = None,
+):
     """Collect hidden states and logits per loop."""
     if hasattr(model, "_read_in") and hasattr(model, "_read_out"):
         zs = model._read_in(xs)
@@ -33,8 +47,20 @@ def _looped_forward_collect(model, xs: torch.Tensor, horizon: int):
         hidden_list = []
         logits_list = []
         use_wpe = getattr(model, "use_wpe", False)
+        batch_size, seq_len, _ = zs.shape
         for step in range(horizon):
-            output = model.forward_single(output + zs, add_wpe=(use_wpe and step == 0))
+            if use_wpe and ape_perm_mode != "none":
+                if ape_perm_mode == "fixed":
+                    if fixed_position_ids is None:
+                        raise ValueError("fixed_position_ids must be provided when ape_perm_mode='fixed'.")
+                    position_ids = fixed_position_ids
+                else:
+                    if rng is None:
+                        raise ValueError("rng must be provided when ape_perm_mode='resample'.")
+                    position_ids = _sample_batch_permutations(batch_size, seq_len, zs.device, rng)
+                output = model._backbone(inputs_embeds=output + zs, position_ids=position_ids).last_hidden_state
+            else:
+                output = model.forward_single(output + zs, add_wpe=use_wpe)
             hidden_list.append(output)
             logits_list.append(model._read_out(output))
         return hidden_list, logits_list
@@ -174,6 +200,19 @@ def main():
         default=None,
         help="Optional full output directory. If set, overrides the default eval/copy/<checkpoint_name>/<run_name>.",
     )
+    parser.add_argument(
+        "--ape_perm_mode",
+        type=str,
+        default="none",
+        choices=["none", "fixed", "resample"],
+        help="APE permutation mode: none (default), fixed per sample across loops, or resample each loop step.",
+    )
+    parser.add_argument(
+        "--ape_perm_seed",
+        type=int,
+        default=1234,
+        help="Random seed for APE permutation sampling.",
+    )
     parser.add_argument("--device", type=str, default="cuda", help="Device to run evaluation on.")
     args = parser.parse_args()
 
@@ -201,6 +240,8 @@ def main():
                 "num_samples": args.num_samples,
                 "batch_size": args.batch_size,
                 "prob_one": args.prob_one,
+                "ape_perm_mode": args.ape_perm_mode,
+                "ape_perm_seed": args.ape_perm_seed,
             }
             run_hash = sha1(json.dumps(run_payload, sort_keys=True).encode("utf-8")).hexdigest()[:8]
             run_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -214,6 +255,10 @@ def main():
     model.to(device)
 
     linear_embedding = hasattr(model, "_read_in") and isinstance(model._read_in, torch.nn.Linear)
+    use_wpe = bool(getattr(model, "use_wpe", False))
+    if args.ape_perm_mode != "none" and not use_wpe:
+        print("Warning: ape_perm_mode is set but checkpoint does not use WPE; permutations will be ignored.")
+    rng = np.random.default_rng(args.ape_perm_seed)
 
     results: Dict[int, Dict[int, Dict[str, float]]] = {}
     for length in lengths:
@@ -249,9 +294,19 @@ def main():
                 xs = torch.tensor(convert_to_one_hot(xs.numpy()), dtype=torch.float32, device=device)
             else:
                 xs = xs.to(device)
+            fixed_position_ids = None
+            if use_wpe and args.ape_perm_mode == "fixed":
+                fixed_position_ids = _sample_batch_permutations(b, ys.shape[1], device, rng)
 
             with torch.no_grad():
-                hidden_list, logits_list = _looped_forward_collect(model, xs, horizon)
+                hidden_list, logits_list = _looped_forward_collect(
+                    model,
+                    xs,
+                    horizon,
+                    ape_perm_mode=args.ape_perm_mode,
+                    fixed_position_ids=fixed_position_ids,
+                    rng=rng,
+                )
                 batch_metrics = _batch_metrics(hidden_list, logits_list, ys, mask, loop_counts)
 
             for lc in loop_counts:
@@ -284,6 +339,8 @@ def main():
                 "num_samples": args.num_samples,
                 "batch_size": args.batch_size,
                 "prob_one": args.prob_one,
+                "ape_perm_mode": args.ape_perm_mode,
+                "ape_perm_seed": args.ape_perm_seed,
                 "results": results,
             },
             f,

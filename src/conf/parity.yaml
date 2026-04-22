@@ -6,6 +6,8 @@ model:
     n_dims: 6
     n_positions: 4096
     linear_embedding: True
+    use_rope: False
+    use_wpe: True
 
 training:
     task: parity

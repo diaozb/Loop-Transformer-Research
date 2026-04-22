@@ -68,7 +68,8 @@ class GeneralTransformerModel(nn.Module):
         return prediction
     
     def forward_single(self, embeds, attention_mask=None, add_wpe=True):
-        if self.use_wpe and add_wpe:
+        use_wpe = getattr(self, "use_wpe", False)
+        if use_wpe and add_wpe:
             batch_size, seq_len, _ = embeds.shape
             position_ids = torch.arange(seq_len, device=embeds.device)
             position_ids = position_ids.unsqueeze(0).expand(batch_size, -1)
@@ -87,8 +88,9 @@ class GeneralTransformerModel(nn.Module):
         zs = self._read_in(zs)
         output = torch.zeros_like(zs).to(zs.device)
         output_list = []
+        use_wpe = getattr(self, "use_wpe", False)
         for i in range(horizon):
-            output = self.forward_single(output+zs, attention_mask, add_wpe=(i == 0))
+            output = self.forward_single(output+zs, attention_mask, add_wpe=use_wpe)
             output_list.append(self._read_out(output).clone())
         return output_list
 
@@ -96,8 +98,9 @@ class GeneralTransformerModel(nn.Module):
         # no injection
         output = self._read_in(zs)
         output_list = []
+        use_wpe = getattr(self, "use_wpe", False)
         for i in range(horizon):
-            output = self.forward_single(output, attention_mask, add_wpe=(i == 0))
+            output = self.forward_single(output, attention_mask, add_wpe=use_wpe)
             output_list.append(self._read_out(output).clone())
         return output_list
     

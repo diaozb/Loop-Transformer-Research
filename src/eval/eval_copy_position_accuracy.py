@@ -26,7 +26,7 @@ def _looped_forward_collect(model, xs: torch.Tensor, horizon: int):
         logits_list = []
         use_wpe = getattr(model, "use_wpe", False)
         for step in range(horizon):
-            output = model.forward_single(output + zs, add_wpe=(use_wpe and step == 0))
+            output = model.forward_single(output + zs, add_wpe=use_wpe)
             logits_list.append(model._read_out(output))
         return logits_list
     raise ValueError("Model does not expose looped forward components (_read_in/_read_out).")
@@ -121,7 +121,7 @@ def main():
         xs_t = xs.to(device)
 
     with torch.no_grad():
-    logits_list = _looped_forward_collect(model, xs_t, horizon)
+        logits_list = _looped_forward_collect(model, xs_t, horizon)
 
     # Position accuracy matrix: [position, loop]
     pos_acc = np.zeros((length, horizon), dtype=np.float32)

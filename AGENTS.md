@@ -36,3 +36,7 @@
 ## Configuration Tips
 - Before training, populate `src/conf/wandb.yaml` with your Weights & Biases credentials.
 - Training outputs (logs/checkpoints) default to `models/`; keep large artifacts out of git.
+
+
+## Run Experiments
+- When start an experiments, read `launch_codex.sh` for wandb apikey
