@@ -1,0 +1,49 @@
+(looptf) root@diaozibo0-0:/data/diaozb/looped-tf-length-generalization/src# python - <<'PY'
+> import pandas as pd
+> from pathlib import Path
+> 
+> run_dir = sorted(Path("../models/nope_baselines/copy_ponder").glob("*"), key=lambda p: p.stat().st_mtime)[-1]
+> out_dir = Path("../eval/nope_copy_ponder") / run_dir.name / "diagnostics_steps20"
+> 
+> df = pd.read_csv(out_dir / "summary_by_length.csv")
+> cols = [
+>     "split",
+>     "length",
+>     "auto_answer_acc",
+>     "auto_code_acc",
+>     "expected_exit_step",
+>     "argmax_exit_step_mean",
+>     "argmax_exit_step_mode",
+>     "best_forced_answer_acc",
+>     "best_forced_answer_step",
+>     "min_answer_step_loss",
+>     "min_answer_loss_step",
+> ]
+> print(df[cols].to_string(index=False))
+> PY
+split  length  auto_answer_acc  auto_code_acc  expected_exit_step  argmax_exit_step_mean  argmax_exit_step_mode  best_forced_answer_acc  best_forced_answer_step  min_answer_step_loss  min_answer_loss_step
+   id       1         1.000000       1.000000            4.940996               1.000000                      1                1.000000                        1          1.782900e-07                     2
+   id       2         1.000000       1.000000            4.959317               1.000000                      1                1.000000                        1          1.010455e-06                    10
+   id       3         1.000000       1.000000            5.177409               1.245605                      1                1.000000                        2          9.318069e-07                    15
+   id       4         1.000000       1.000000            5.427937               1.504395                      2                1.000000                        2          8.268829e-07                    14
+   id       5         1.000000       1.000000            5.622943               1.701172                      2                1.000000                        2          7.899473e-07                    20
+   id       6         1.000000       1.000000            5.741981               1.816406                      2                1.000000                        2          7.726383e-07                    20
+   id       7         1.000000       1.000000            5.820218               1.890625                      2                1.000000                        2          7.609649e-07                    20
+   id       8         1.000000       1.000000            5.864195               1.936035                      2                1.000000                        2          7.550475e-07                    20
+   id       9         1.000000       1.000000            5.894278               1.969727                      2                1.000000                        2          7.475282e-07                    20
+   id      10         1.000000       1.000000            5.899029               1.983398                      2                1.000000                        2          7.444581e-07                    20
+   id      11         1.000000       1.000000            5.908785               1.994629                      2                1.000000                        2          7.325800e-07                    20
+   id      12         1.000000       1.000000            5.907200               1.997559                      2                1.000000                        2          7.291282e-07                    20
+   id      13         1.000000       1.000000            5.908914               1.998535                      2                1.000000                        2          7.321758e-07                    20
+   id      14         1.000000       1.000000            5.909053               2.000000                      2                1.000000                        2          7.215127e-07                    20
+   id      15         1.000000       1.000000            5.911664               2.000000                      2                1.000000                        2          7.176496e-07                    20
+   id      16         1.000000       1.000000            5.915166               2.000488                      2                1.000000                        2          7.171107e-07                    20
+   id      17         1.000000       1.000000            5.921317               2.000488                      2                1.000000                        2          7.146322e-07                    20
+   id      18         0.999512       0.999512            5.932661               2.000488                      2                1.000000                        3          1.009911e-06                    20
+   id      19         0.999512       0.999512            5.948233               2.000000                      2                1.000000                        3          7.086534e-07                    20
+   id      20         0.999512       0.999512            5.981074               2.010254                      2                1.000000                        3          7.056657e-07                    20
+  ood      21         0.998047       0.998047            6.053107               2.184082                      2                1.000000                        3          8.207160e-07                    20
+  ood      22         0.997070       0.997070            6.189666               2.514160                      3                1.000000                        3          9.372084e-06                     6
+  ood      40         0.909668       0.909668            8.521512               4.922363                      5                0.947266                       15          5.663376e-03                     8
+  ood      60         0.007324       0.006348           10.208980               6.756836                      7                0.010742                        9          3.003760e-01                     6
+(looptf) root@diaozibo0-0:/data/diaozb/looped-tf-length-generalization/src# 

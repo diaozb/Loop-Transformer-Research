@@ -1,0 +1,260 @@
+sample=0
+input=0010110101 target=0010110101
+  loop=1 pred=0000000333
+  loop=2 pred=0011000333
+  loop=3 pred=0010001333
+  loop=4 pred=0010111133
+  loop=5 pred=0010110033
+  loop=6 pred=0010110113
+  loop=7 pred=0010110103
+  loop=8 pred=0010110101
+  loop=9 pred=0010110101
+  loop=10 pred=0010110101
+
+sample=1
+input=0001010000 target=0001010000
+  loop=1 pred=0000000333
+  loop=2 pred=0001100033
+  loop=3 pred=0001000033
+  loop=4 pred=0001010033
+  loop=5 pred=0001010003
+  loop=6 pred=0001010000
+  loop=7 pred=0001010000
+  loop=8 pred=0001010000
+  loop=9 pred=0001010000
+  loop=10 pred=0001010000
+
+sample=2
+input=0101011011 target=0101011011
+  loop=1 pred=0000000333
+  loop=2 pred=0110000333
+  loop=3 pred=0100013333
+  loop=4 pred=0101111333
+  loop=5 pred=0101001133
+  loop=6 pred=0101011113
+  loop=7 pred=0101011013
+  loop=8 pred=0101011011
+  loop=9 pred=0101011011
+  loop=10 pred=0101011011
+
+sample=3
+input=1011000010 target=1011000010
+  loop=1 pred=1100000333
+  loop=2 pred=1000000333
+  loop=3 pred=1011000333
+  loop=4 pred=1011000033
+  loop=5 pred=1011000013
+  loop=6 pred=1011000010
+  loop=7 pred=1011000010
+  loop=8 pred=1011000010
+  loop=9 pred=1011000010
+  loop=10 pred=1011000010
+
+sample=4
+input=0111011000 target=0111011000
+  loop=1 pred=0000000333
+  loop=2 pred=0111000333
+  loop=3 pred=0111000033
+  loop=4 pred=0111011033
+  loop=5 pred=0111011000
+  loop=6 pred=0111011000
+  loop=7 pred=0111011000
+  loop=8 pred=0111011000
+  loop=9 pred=0111011000
+  loop=10 pred=0111011000
+
+sample=5
+input=0101100110 target=0101100110
+  loop=1 pred=0000000333
+  loop=2 pred=0110000333
+  loop=3 pred=0100000333
+  loop=4 pred=0101110033
+  loop=5 pred=0101100033
+  loop=6 pred=0101100113
+  loop=7 pred=0101100110
+  loop=8 pred=0101100110
+  loop=9 pred=0101100110
+  loop=10 pred=0101100110
+
+sample=6
+input=1101011111 target=1101011111
+  loop=1 pred=1111000333
+  loop=2 pred=1100111333
+  loop=3 pred=1101111333
+  loop=4 pred=1101001133
+  loop=5 pred=1101011113
+  loop=6 pred=1101011111
+  loop=7 pred=1101011111
+  loop=8 pred=1101011111
+  loop=9 pred=1101011111
+  loop=10 pred=1101011111
+
+sample=7
+input=1111011011 target=1111011011
+  loop=1 pred=1111100333
+  loop=2 pred=1111001133
+  loop=3 pred=1111011113
+  loop=4 pred=1111011003
+  loop=5 pred=1111011011
+  loop=6 pred=1111011011
+  loop=7 pred=1111011011
+  loop=8 pred=1111011011
+  loop=9 pred=1111011011
+  loop=10 pred=1111011011
+
+sample=8
+input=0110110101 target=0110110101
+  loop=1 pred=0000000333
+  loop=2 pred=0111000333
+  loop=3 pred=0110011333
+  loop=4 pred=0110111133
+  loop=5 pred=0110110033
+  loop=6 pred=0110110113
+  loop=7 pred=0110110103
+  loop=8 pred=0110110101
+  loop=9 pred=0110110101
+  loop=10 pred=0110110101
+
+sample=9
+input=1110001111 target=1110001111
+  loop=1 pred=1111000333
+  loop=2 pred=1110001133
+  loop=3 pred=1110001113
+  loop=4 pred=1110001111
+  loop=5 pred=1110001111
+  loop=6 pred=1110001111
+  loop=7 pred=1110001111
+  loop=8 pred=1110001111
+  loop=9 pred=1110001111
+  loop=10 pred=1110001111
+
+sample=10
+input=0010011001 target=0010011001
+  loop=1 pred=0000000333
+  loop=2 pred=0011000333
+  loop=3 pred=0010000333
+  loop=4 pred=0010011003
+  loop=5 pred=0010011003
+  loop=6 pred=0010011001
+  loop=7 pred=0010011001
+  loop=8 pred=0010011001
+  loop=9 pred=0010011001
+  loop=10 pred=0010011001
+
+sample=11
+input=0001110110 target=0001110110
+  loop=1 pred=0000003333
+  loop=2 pred=0001111033
+  loop=3 pred=0001110003
+  loop=4 pred=0001110113
+  loop=5 pred=0001110110
+  loop=6 pred=0001110110
+  loop=7 pred=0001110110
+  loop=8 pred=0001110110
+  loop=9 pred=0001110110
+  loop=10 pred=0001110110
+
+sample=12
+input=0111110101 target=0111110101
+  loop=1 pred=0000003333
+  loop=2 pred=0111111133
+  loop=3 pred=0111110033
+  loop=4 pred=0111110103
+  loop=5 pred=0111110103
+  loop=6 pred=0111110101
+  loop=7 pred=0111110101
+  loop=8 pred=0111110101
+  loop=9 pred=0111110101
+  loop=10 pred=0111110101
+
+sample=13
+input=0010000000 target=0010000000
+  loop=1 pred=0000000333
+  loop=2 pred=0010000333
+  loop=3 pred=0010000033
+  loop=4 pred=0010000000
+  loop=5 pred=0010000000
+  loop=6 pred=0010000000
+  loop=7 pred=0010000000
+  loop=8 pred=0010000000
+  loop=9 pred=0010000000
+  loop=10 pred=0010000000
+
+sample=14
+input=1100001101 target=1100001101
+  loop=1 pred=1110000333
+  loop=2 pred=1100000033
+  loop=3 pred=1100001113
+  loop=4 pred=1100001103
+  loop=5 pred=1100001101
+  loop=6 pred=1100001101
+  loop=7 pred=1100001101
+  loop=8 pred=1100001101
+  loop=9 pred=1100001101
+  loop=10 pred=1100001101
+
+sample=15
+input=1011111001 target=1011111001
+  loop=1 pred=1110000333
+  loop=2 pred=1011113333
+  loop=3 pred=1011111133
+  loop=4 pred=1011111003
+  loop=5 pred=1011111001
+  loop=6 pred=1011111001
+  loop=7 pred=1011111001
+  loop=8 pred=1011111001
+  loop=9 pred=1011111001
+  loop=10 pred=1011111001
+
+sample=16
+input=1101110010 target=1101110010
+  loop=1 pred=1110000333
+  loop=2 pred=1100000333
+  loop=3 pred=1101110033
+  loop=4 pred=1101110003
+  loop=5 pred=1101110013
+  loop=6 pred=1101110010
+  loop=7 pred=1101110010
+  loop=8 pred=1101110010
+  loop=9 pred=1101110010
+  loop=10 pred=1101110010
+
+sample=17
+input=1100001111 target=1100001111
+  loop=1 pred=1110000333
+  loop=2 pred=1100001333
+  loop=3 pred=1100001113
+  loop=4 pred=1100001111
+  loop=5 pred=1100001111
+  loop=6 pred=1100001111
+  loop=7 pred=1100001111
+  loop=8 pred=1100001111
+  loop=9 pred=1100001111
+  loop=10 pred=1100001111
+
+sample=18
+input=0101100100 target=0101100100
+  loop=1 pred=0000000333
+  loop=2 pred=0110000333
+  loop=3 pred=0100000333
+  loop=4 pred=0101100033
+  loop=5 pred=0101100033
+  loop=6 pred=0101100103
+  loop=7 pred=0101100100
+  loop=8 pred=0101100100
+  loop=9 pred=0101100100
+  loop=10 pred=0101100100
+
+sample=19
+input=0110110100 target=0110110100
+  loop=1 pred=0000000333
+  loop=2 pred=0110000333
+  loop=3 pred=0110000333
+  loop=4 pred=0110110033
+  loop=5 pred=0110110003
+  loop=6 pred=0110110103
+  loop=7 pred=0110110100
+  loop=8 pred=0110110100
+  loop=9 pred=0110110100
+  loop=10 pred=0110110100
+

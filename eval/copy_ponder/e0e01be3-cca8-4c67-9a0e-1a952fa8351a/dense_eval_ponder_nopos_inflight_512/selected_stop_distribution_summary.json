@@ -1,0 +1,35 @@
+[
+  {
+    "length": 20,
+    "peak_exit_step": 6,
+    "peak_exit_prob": 0.1471,
+    "median_exit_step": 8,
+    "p90_exit_step": 15,
+    "mass_1_8": 0.5425,
+    "mass_9_12": 0.2708,
+    "mass_13_20": 0.1561,
+    "mass_21_40": 0.0306
+  },
+  {
+    "length": 30,
+    "peak_exit_step": 9,
+    "peak_exit_prob": 0.1384,
+    "median_exit_step": 10,
+    "p90_exit_step": 18,
+    "mass_1_8": 0.2497,
+    "mass_9_12": 0.4375,
+    "mass_13_20": 0.2614,
+    "mass_21_40": 0.0514
+  },
+  {
+    "length": 40,
+    "peak_exit_step": 11,
+    "peak_exit_prob": 0.1325,
+    "median_exit_step": 13,
+    "p90_exit_step": 20,
+    "mass_1_8": 0.0401,
+    "mass_9_12": 0.4441,
+    "mass_13_20": 0.4307,
+    "mass_21_40": 0.0851
+  }
+]
