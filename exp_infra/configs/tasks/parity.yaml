@@ -1,0 +1,10 @@
+task:
+  name: parity
+  n_dims: 6
+  min_length: 1
+  train_length_start: 2
+  train_length_end: 21
+  train_length_inc: 1
+  train_length_interval: 500
+  test_length: 40
+

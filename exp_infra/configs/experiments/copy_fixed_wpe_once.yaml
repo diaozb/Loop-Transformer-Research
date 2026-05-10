@@ -1,0 +1,8 @@
+include:
+  - ../tasks/copy.yaml
+  - ../models/gpt2_loop.yaml
+  - ../trainers/fixed_loop.yaml
+  - ../pe/wpe_once.yaml
+seed: 42
+tags: [copy, fixed_loop, wpe_once]
+

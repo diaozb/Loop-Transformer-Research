@@ -1,0 +1,11 @@
+task:
+  name: copy
+  n_dims: 6
+  min_length: 1
+  train_length_start: 2
+  train_length_end: 20
+  train_length_inc: 1
+  train_length_interval: 1000
+  test_length: 30
+  copy_prob_one: 0.5
+

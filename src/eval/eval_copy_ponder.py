@@ -99,7 +99,7 @@ def _collect_ponder_steps(model, xs: torch.Tensor, mask: torch.Tensor, horizon: 
     use_wpe = getattr(base, "use_wpe", False)
 
     for step in range(horizon):
-        output = base.forward_single(output + zs, add_wpe=use_wpe)
+        output = base.forward_single(output + zs, add_wpe=use_wpe, step_idx=step)
         logits = base._read_out(output)
         pooled = _first_answer_hidden(output, mask)
         if step == horizon - 1:

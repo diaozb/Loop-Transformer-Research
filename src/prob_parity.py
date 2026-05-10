@@ -92,8 +92,8 @@ def _looped_hidden_collect(model, xs: torch.Tensor, horizon: int) -> List[torch.
         zs = model._read_in(xs)
         output = torch.zeros_like(zs).to(zs.device)
         hidden_list = []
-        for _ in range(horizon):
-            output = model.forward_single(output + zs)
+        for step in range(horizon):
+            output = model.forward_single(output + zs, step_idx=step)
             hidden_list.append(output)
         return hidden_list
     raise ValueError("Model does not expose looped forward components (_read_in/_read_out).")

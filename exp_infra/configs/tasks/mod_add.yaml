@@ -1,0 +1,11 @@
+task:
+  name: mod_add
+  n_dims: 13
+  min_length: 1
+  train_length_start: 2
+  train_length_end: 20
+  train_length_inc: 1
+  train_length_interval: 2500
+  test_length: 30
+  modulus: 11
+

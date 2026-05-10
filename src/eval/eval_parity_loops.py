@@ -60,7 +60,7 @@ def _looped_forward_collect(
                     position_ids = _sample_batch_permutations(batch_size, seq_len, zs.device, rng)
                 output = model._backbone(inputs_embeds=output + zs, position_ids=position_ids).last_hidden_state
             else:
-                output = model.forward_single(output + zs, add_wpe=use_wpe)
+                output = model.forward_single(output + zs, add_wpe=use_wpe, step_idx=step)
             hidden_list.append(output)
             logits_list.append(model._read_out(output))
         return hidden_list, logits_list

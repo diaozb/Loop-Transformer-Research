@@ -1,0 +1,8 @@
+include:
+  - ../tasks/copy.yaml
+  - ../models/gpt2_loop.yaml
+  - ../trainers/ponder.yaml
+  - ../pe/nope.yaml
+seed: 42
+tags: [copy, ponder, nope]
+

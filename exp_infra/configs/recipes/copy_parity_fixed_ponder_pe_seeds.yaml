@@ -1,0 +1,229 @@
+# Full sweep for the migrated copy/parity infra.
+#
+# Scope: 2 tasks x 2 trainers x 4 PE modes x 3 seeds = 48 runs.
+# Seeds: 17, 101, 1009.
+# PE modes:
+#   - nope: no positional encoding
+#   - rope: rotary positional encoding
+#   - wpe_once: learned absolute PE applied once before looping
+#   - wpe_all: learned absolute PE applied at every loop
+#
+# Task/model parameters match the legacy task-specific configs:
+#   - parity: n_embd=256, n_layer=1, n_head=64, test_length=40
+#   - copy:   n_embd=256, n_layer=2, n_head=8,  test_length=30
+name: copy_parity_fixed_ponder_pe_seeds
+
+defaults:
+  device: cuda
+  logging:
+    output_root: exp_infra/runs/copy_parity_fixed_ponder_pe_seeds
+  eval:
+    run_after_train: true
+    after_train_checkpoint: best
+
+_parity_arch: &parity_arch
+  n_embd: 256
+  n_layer: 1
+  n_head: 64
+
+_copy_arch: &copy_arch
+  n_embd: 256
+  n_layer: 2
+  n_head: 8
+
+_parity_fixed_nope: &parity_fixed_nope
+  name: parity_fixed_loop_nope_seed{seed}_L{model.n_layer}_H{model.n_head}
+  include: [../tasks/parity.yaml, ../models/gpt2_loop.yaml, ../trainers/fixed_loop.yaml, ../pe/nope.yaml]
+  model: *parity_arch
+  tags: [parity, fixed_loop, nope]
+
+_parity_fixed_rope: &parity_fixed_rope
+  name: parity_fixed_loop_rope_seed{seed}_L{model.n_layer}_H{model.n_head}
+  include: [../tasks/parity.yaml, ../models/gpt2_loop.yaml, ../trainers/fixed_loop.yaml, ../pe/rope.yaml]
+  model: *parity_arch
+  tags: [parity, fixed_loop, rope]
+
+_parity_fixed_wpe_once: &parity_fixed_wpe_once
+  name: parity_fixed_loop_wpe_once_seed{seed}_L{model.n_layer}_H{model.n_head}
+  include: [../tasks/parity.yaml, ../models/gpt2_loop.yaml, ../trainers/fixed_loop.yaml, ../pe/wpe_once.yaml]
+  model: *parity_arch
+  tags: [parity, fixed_loop, wpe_once]
+
+_parity_fixed_wpe_all: &parity_fixed_wpe_all
+  name: parity_fixed_loop_wpe_all_seed{seed}_L{model.n_layer}_H{model.n_head}
+  include: [../tasks/parity.yaml, ../models/gpt2_loop.yaml, ../trainers/fixed_loop.yaml, ../pe/wpe_all.yaml]
+  model: *parity_arch
+  tags: [parity, fixed_loop, wpe_all]
+
+_parity_ponder_nope: &parity_ponder_nope
+  name: parity_ponder_nope_seed{seed}_L{model.n_layer}_H{model.n_head}_T{trainer.ponder_n_steps}
+  include: [../tasks/parity.yaml, ../models/gpt2_loop.yaml, ../trainers/ponder.yaml, ../pe/nope.yaml]
+  model: *parity_arch
+  tags: [parity, ponder, nope]
+
+_parity_ponder_rope: &parity_ponder_rope
+  name: parity_ponder_rope_seed{seed}_L{model.n_layer}_H{model.n_head}_T{trainer.ponder_n_steps}
+  include: [../tasks/parity.yaml, ../models/gpt2_loop.yaml, ../trainers/ponder.yaml, ../pe/rope.yaml]
+  model: *parity_arch
+  tags: [parity, ponder, rope]
+
+_parity_ponder_wpe_once: &parity_ponder_wpe_once
+  name: parity_ponder_wpe_once_seed{seed}_L{model.n_layer}_H{model.n_head}_T{trainer.ponder_n_steps}
+  include: [../tasks/parity.yaml, ../models/gpt2_loop.yaml, ../trainers/ponder.yaml, ../pe/wpe_once.yaml]
+  model: *parity_arch
+  tags: [parity, ponder, wpe_once]
+
+_parity_ponder_wpe_all: &parity_ponder_wpe_all
+  name: parity_ponder_wpe_all_seed{seed}_L{model.n_layer}_H{model.n_head}_T{trainer.ponder_n_steps}
+  include: [../tasks/parity.yaml, ../models/gpt2_loop.yaml, ../trainers/ponder.yaml, ../pe/wpe_all.yaml]
+  model: *parity_arch
+  tags: [parity, ponder, wpe_all]
+
+_copy_fixed_nope: &copy_fixed_nope
+  name: copy_fixed_loop_nope_seed{seed}_L{model.n_layer}_H{model.n_head}
+  include: [../tasks/copy.yaml, ../models/gpt2_loop.yaml, ../trainers/fixed_loop.yaml, ../pe/nope.yaml]
+  model: *copy_arch
+  tags: [copy, fixed_loop, nope]
+
+_copy_fixed_rope: &copy_fixed_rope
+  name: copy_fixed_loop_rope_seed{seed}_L{model.n_layer}_H{model.n_head}
+  include: [../tasks/copy.yaml, ../models/gpt2_loop.yaml, ../trainers/fixed_loop.yaml, ../pe/rope.yaml]
+  model: *copy_arch
+  tags: [copy, fixed_loop, rope]
+
+_copy_fixed_wpe_once: &copy_fixed_wpe_once
+  name: copy_fixed_loop_wpe_once_seed{seed}_L{model.n_layer}_H{model.n_head}
+  include: [../tasks/copy.yaml, ../models/gpt2_loop.yaml, ../trainers/fixed_loop.yaml, ../pe/wpe_once.yaml]
+  model: *copy_arch
+  tags: [copy, fixed_loop, wpe_once]
+
+_copy_fixed_wpe_all: &copy_fixed_wpe_all
+  name: copy_fixed_loop_wpe_all_seed{seed}_L{model.n_layer}_H{model.n_head}
+  include: [../tasks/copy.yaml, ../models/gpt2_loop.yaml, ../trainers/fixed_loop.yaml, ../pe/wpe_all.yaml]
+  model: *copy_arch
+  tags: [copy, fixed_loop, wpe_all]
+
+_copy_ponder_nope: &copy_ponder_nope
+  name: copy_ponder_nope_seed{seed}_L{model.n_layer}_H{model.n_head}_T{trainer.ponder_n_steps}
+  include: [../tasks/copy.yaml, ../models/gpt2_loop.yaml, ../trainers/ponder.yaml, ../pe/nope.yaml]
+  model: *copy_arch
+  tags: [copy, ponder, nope]
+
+_copy_ponder_rope: &copy_ponder_rope
+  name: copy_ponder_rope_seed{seed}_L{model.n_layer}_H{model.n_head}_T{trainer.ponder_n_steps}
+  include: [../tasks/copy.yaml, ../models/gpt2_loop.yaml, ../trainers/ponder.yaml, ../pe/rope.yaml]
+  model: *copy_arch
+  tags: [copy, ponder, rope]
+
+_copy_ponder_wpe_once: &copy_ponder_wpe_once
+  name: copy_ponder_wpe_once_seed{seed}_L{model.n_layer}_H{model.n_head}_T{trainer.ponder_n_steps}
+  include: [../tasks/copy.yaml, ../models/gpt2_loop.yaml, ../trainers/ponder.yaml, ../pe/wpe_once.yaml]
+  model: *copy_arch
+  tags: [copy, ponder, wpe_once]
+
+_copy_ponder_wpe_all: &copy_ponder_wpe_all
+  name: copy_ponder_wpe_all_seed{seed}_L{model.n_layer}_H{model.n_head}_T{trainer.ponder_n_steps}
+  include: [../tasks/copy.yaml, ../models/gpt2_loop.yaml, ../trainers/ponder.yaml, ../pe/wpe_all.yaml]
+  model: *copy_arch
+  tags: [copy, ponder, wpe_all]
+
+recipes:
+  - <<: *parity_fixed_nope
+    seed: 17
+  - <<: *parity_fixed_nope
+    seed: 101
+  - <<: *parity_fixed_nope
+    seed: 1009
+  - <<: *parity_fixed_rope
+    seed: 17
+  - <<: *parity_fixed_rope
+    seed: 101
+  - <<: *parity_fixed_rope
+    seed: 1009
+  - <<: *parity_fixed_wpe_once
+    seed: 17
+  - <<: *parity_fixed_wpe_once
+    seed: 101
+  - <<: *parity_fixed_wpe_once
+    seed: 1009
+  - <<: *parity_fixed_wpe_all
+    seed: 17
+  - <<: *parity_fixed_wpe_all
+    seed: 101
+  - <<: *parity_fixed_wpe_all
+    seed: 1009
+
+  - <<: *parity_ponder_nope
+    seed: 17
+  - <<: *parity_ponder_nope
+    seed: 101
+  - <<: *parity_ponder_nope
+    seed: 1009
+  - <<: *parity_ponder_rope
+    seed: 17
+  - <<: *parity_ponder_rope
+    seed: 101
+  - <<: *parity_ponder_rope
+    seed: 1009
+  - <<: *parity_ponder_wpe_once
+    seed: 17
+  - <<: *parity_ponder_wpe_once
+    seed: 101
+  - <<: *parity_ponder_wpe_once
+    seed: 1009
+  - <<: *parity_ponder_wpe_all
+    seed: 17
+  - <<: *parity_ponder_wpe_all
+    seed: 101
+  - <<: *parity_ponder_wpe_all
+    seed: 1009
+
+  - <<: *copy_fixed_nope
+    seed: 17
+  - <<: *copy_fixed_nope
+    seed: 101
+  - <<: *copy_fixed_nope
+    seed: 1009
+  - <<: *copy_fixed_rope
+    seed: 17
+  - <<: *copy_fixed_rope
+    seed: 101
+  - <<: *copy_fixed_rope
+    seed: 1009
+  - <<: *copy_fixed_wpe_once
+    seed: 17
+  - <<: *copy_fixed_wpe_once
+    seed: 101
+  - <<: *copy_fixed_wpe_once
+    seed: 1009
+  - <<: *copy_fixed_wpe_all
+    seed: 17
+  - <<: *copy_fixed_wpe_all
+    seed: 101
+  - <<: *copy_fixed_wpe_all
+    seed: 1009
+
+  - <<: *copy_ponder_nope
+    seed: 17
+  - <<: *copy_ponder_nope
+    seed: 101
+  - <<: *copy_ponder_nope
+    seed: 1009
+  - <<: *copy_ponder_rope
+    seed: 17
+  - <<: *copy_ponder_rope
+    seed: 101
+  - <<: *copy_ponder_rope
+    seed: 1009
+  - <<: *copy_ponder_wpe_once
+    seed: 17
+  - <<: *copy_ponder_wpe_once
+    seed: 101
+  - <<: *copy_ponder_wpe_once
+    seed: 1009
+  - <<: *copy_ponder_wpe_all
+    seed: 17
+  - <<: *copy_ponder_wpe_all
+    seed: 101
+  - <<: *copy_ponder_wpe_all
+    seed: 1009

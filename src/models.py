@@ -12,6 +12,7 @@ def build_general_model(conf, y_dim=1):
             n_head=conf.n_head,
             linear_embedding=conf.linear_embedding,
             use_wpe=conf.use_wpe,
+            wpe_mode=getattr(conf, "wpe_mode", None),
             use_rope=conf.use_rope,
             rope_theta=conf.rope_theta,
         )
@@ -30,6 +31,7 @@ class GeneralTransformerModel(nn.Module):
         n_head=4,
         linear_embedding=False,
         use_wpe=False,
+        wpe_mode=None,
         use_rope=False,
         rope_theta=10000.0,
     ):
@@ -48,6 +50,12 @@ class GeneralTransformerModel(nn.Module):
         self.n_positions = n_positions
         self.n_dims = n_dims
         self.use_wpe = use_wpe
+        if wpe_mode is None:
+            self.wpe_mode = "all" if use_wpe else "none"
+        else:
+            self.wpe_mode = wpe_mode
+        if self.wpe_mode not in ("none", "once", "all"):
+            raise ValueError(f"Unsupported wpe_mode: {self.wpe_mode}")
         self.use_rope = use_rope
         if self.use_wpe and self.use_rope:
             raise ValueError("use_wpe and use_rope cannot both be True.")
@@ -67,9 +75,24 @@ class GeneralTransformerModel(nn.Module):
         prediction = self._read_out(output)
         return prediction
     
-    def forward_single(self, embeds, attention_mask=None, add_wpe=True):
+    def _should_add_wpe(self, add_wpe=None, step_idx=None):
         use_wpe = getattr(self, "use_wpe", False)
-        if use_wpe and add_wpe:
+        if not use_wpe:
+            return False
+        if add_wpe is not None and not add_wpe:
+            return False
+
+        wpe_mode = getattr(self, "wpe_mode", "all")
+        if wpe_mode == "none":
+            return False
+        if wpe_mode == "all":
+            return True
+        if wpe_mode == "once":
+            return step_idx in (None, 0)
+        raise ValueError(f"Unsupported wpe_mode: {wpe_mode}")
+
+    def forward_single(self, embeds, attention_mask=None, add_wpe=None, step_idx=None):
+        if self._should_add_wpe(add_wpe=add_wpe, step_idx=step_idx):
             batch_size, seq_len, _ = embeds.shape
             position_ids = torch.arange(seq_len, device=embeds.device)
             position_ids = position_ids.unsqueeze(0).expand(batch_size, -1)
@@ -90,7 +113,7 @@ class GeneralTransformerModel(nn.Module):
         output_list = []
         use_wpe = getattr(self, "use_wpe", False)
         for i in range(horizon):
-            output = self.forward_single(output+zs, attention_mask, add_wpe=use_wpe)
+            output = self.forward_single(output+zs, attention_mask, add_wpe=use_wpe, step_idx=i)
             output_list.append(self._read_out(output).clone())
         return output_list
 
@@ -100,7 +123,7 @@ class GeneralTransformerModel(nn.Module):
         output_list = []
         use_wpe = getattr(self, "use_wpe", False)
         for i in range(horizon):
-            output = self.forward_single(output, attention_mask, add_wpe=use_wpe)
+            output = self.forward_single(output, attention_mask, add_wpe=use_wpe, step_idx=i)
             output_list.append(self._read_out(output).clone())
         return output_list
     

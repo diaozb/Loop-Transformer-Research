@@ -1,0 +1,35 @@
+name: smoke_queue
+defaults:
+  seed: 42
+  device: cpu
+  logging:
+    output_root: /tmp/ltf_recipe_smoke_runs
+  trainer:
+    train_steps: 1
+    batch_size: 2
+    eval_batch_size: 2
+    eval_every: 1
+  model:
+    n_embd: 16
+    n_layer: 1
+    n_head: 4
+  task:
+    test_length: 2
+recipes:
+  - name: parity_ponder_rope_T{trainer.ponder_n_steps}_L{model.n_layer}_H{model.n_head}
+    include:
+      - ../tasks/parity.yaml
+      - ../models/gpt2_loop.yaml
+      - ../trainers/ponder.yaml
+      - ../pe/rope.yaml
+    model:
+      n_layer: 1
+      n_head: 4
+    trainer:
+      ponder_n_steps: 3
+  - name: copy_fixed_wpe_once_L{model.n_layer}_H{model.n_head}
+    include:
+      - ../tasks/copy.yaml
+      - ../models/gpt2_loop.yaml
+      - ../trainers/fixed_loop.yaml
+      - ../pe/wpe_once.yaml

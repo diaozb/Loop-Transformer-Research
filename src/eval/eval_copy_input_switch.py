@@ -156,7 +156,7 @@ def _run_switch_experiment(model, device: torch.device, use_wpe: bool):
                             inject = torch.randn_like(zs_A) * sigma
                         else:
                             inject = zs_B
-                    output = model.forward_single(output + inject, add_wpe=use_wpe)
+                    output = model.forward_single(output + inject, add_wpe=use_wpe, step_idx=step - 1)
                 logits_final = model._read_out(output)
                 sums_final[switch_step]["A"] += _cross_entropy_on_mask(logits_final, ys_A, mask_A) * b
                 sums_final[switch_step]["B"] += _cross_entropy_on_mask(logits_final, ys_B, mask_B) * b

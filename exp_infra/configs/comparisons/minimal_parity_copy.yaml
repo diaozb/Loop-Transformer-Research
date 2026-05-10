@@ -1,0 +1,10 @@
+name: minimal_parity_copy
+description: Minimal smoke comparison across task/trainer/PE settings.
+experiments:
+  - name: parity_ponder_rope
+    config: ../experiments/parity_ponder_rope.yaml
+  - name: copy_ponder_nope
+    config: ../experiments/copy_ponder_nope.yaml
+  - name: copy_fixed_wpe_once
+    config: ../experiments/copy_fixed_wpe_once.yaml
+

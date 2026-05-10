@@ -1,0 +1,10 @@
+include:
+  - ../tasks/copy.yaml
+  - ../models/gpt2_loop.yaml
+  - ../trainers/ponder.yaml
+  - ../pe/wpe_once.yaml
+seed: 42
+trainer:
+  ponder_n_steps: 40
+tags: [copy, ponder, wpe_once]
+

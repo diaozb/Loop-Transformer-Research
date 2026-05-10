@@ -34,7 +34,7 @@ def _looped_forward_collect(model, xs: torch.Tensor, horizon: int):
         logits_list = []
         use_wpe = getattr(model, "use_wpe", False)
         for step in range(horizon):
-            output = model.forward_single(output + zs, add_wpe=use_wpe)
+            output = model.forward_single(output + zs, add_wpe=use_wpe, step_idx=step)
             hidden_list.append(output)
             logits_list.append(model._read_out(output))
         return hidden_list, logits_list

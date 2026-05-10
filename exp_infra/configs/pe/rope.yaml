@@ -1,0 +1,6 @@
+model:
+  use_wpe: false
+  wpe_mode: none
+  use_rope: true
+  rope_theta: 10000.0
+

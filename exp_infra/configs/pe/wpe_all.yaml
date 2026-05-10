@@ -1,0 +1,5 @@
+model:
+  use_wpe: true
+  wpe_mode: all
+  use_rope: false
+

@@ -23,6 +23,7 @@ model_schema = {
     "n_head": merge(tinteger, required),
     "linear_embedding": merge(tboolean, default(False)),
     "use_wpe": merge(tboolean, default(False)),
+    "wpe_mode": merge(tstring, nullable, allowed(["none", "once", "all"]), default(None)),
     "use_rope": merge(tboolean, default(False)),
     "rope_theta": merge(tfloat, default(10000.0)),
 }

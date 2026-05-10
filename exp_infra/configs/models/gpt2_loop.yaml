@@ -1,0 +1,12 @@
+model:
+  family: gpt2
+  n_positions: 4096
+  n_dims: 6
+  n_embd: 256
+  n_layer: 2
+  n_head: 8
+  linear_embedding: true
+  use_wpe: false
+  wpe_mode: none
+  use_rope: false
+  rope_theta: 10000.0

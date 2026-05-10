@@ -26,7 +26,7 @@ def _looped_forward_collect(model, xs: torch.Tensor, horizon: int):
         logits_list = []
         use_wpe = getattr(model, "use_wpe", False)
         for step in range(horizon):
-            output = model.forward_single(output + zs, add_wpe=use_wpe)
+            output = model.forward_single(output + zs, add_wpe=use_wpe, step_idx=step)
             logits_list.append(model._read_out(output))
         return logits_list
     raise ValueError("Model does not expose looped forward components (_read_in/_read_out).")

@@ -1,0 +1,13 @@
+include:
+  - ../tasks/parity.yaml
+  - ../models/gpt2_loop.yaml
+  - ../trainers/ponder.yaml
+  - ../pe/rope.yaml
+seed: 42
+model:
+  n_layer: 1
+  n_head: 64
+trainer:
+  ponder_n_steps: 20
+tags: [parity, ponder, rope]
+

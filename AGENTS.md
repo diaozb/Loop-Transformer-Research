@@ -40,3 +40,7 @@
 
 ## Run Experiments
 - When start an experiments, read `launch_codex.sh` for wandb apikey
+- Read `experiment_plan.md` to get the next step plan
+- Read `experiment_plan.md` to get the overview of the project
+- Use git to manage the result and code before and after each experiment
+- Analyze the result in `results_collection`
