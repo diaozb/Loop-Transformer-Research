@@ -2,4 +2,5 @@ __pycache__
 /models
 wandb
 /src/models
-/eval
+/logs
+/results_collection
