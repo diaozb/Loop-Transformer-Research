@@ -1,0 +1,9 @@
+Evaluating epsilon=0.0001
+Evaluating epsilon=0.0003
+Evaluating epsilon=0.001
+Evaluating epsilon=0.003
+Evaluating epsilon=0.01
+Done.
+Raw results: ../models/rope_baselines/copy_ponder/85c8ce6d-4abc-4432-a343-739683bc4bf7/sharpness_formal/sharpness_raw.csv
+Summary:     ../models/rope_baselines/copy_ponder/85c8ce6d-4abc-4432-a343-739683bc4bf7/sharpness_formal/sharpness_summary.csv
+Plot:        ../models/rope_baselines/copy_ponder/85c8ce6d-4abc-4432-a343-739683bc4bf7/sharpness_formal/sharpness_delta_objective.png
