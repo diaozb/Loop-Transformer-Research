@@ -1,0 +1,56 @@
+======================================
+Copy + Ponder sharpness formal eval
+timestamp: 20260528_011505
+lengths: 1-20,21,22,40,60
+epsilons: 0,1e-4,3e-4,1e-3,3e-3,1e-2
+directions: 8
+n_batches: 20
+batch_size: 128
+======================================
+
+======================================
+Running nope
+run_dir: ../models/nope_baselines/copy_ponder/deaab117-4677-4d40-85cb-14b8fc7d0506
+out_dir: ../models/nope_baselines/copy_ponder/deaab117-4677-4d40-85cb-14b8fc7d0506/sharpness_formal
+log: ../eval/copy_ponder_sharpness_logs/nope_20260528_011505.log
+======================================
+Evaluating epsilon=0.0001
+Evaluating epsilon=0.0003
+Evaluating epsilon=0.001
+Evaluating epsilon=0.003
+Evaluating epsilon=0.01
+Done.
+Raw results: ../models/nope_baselines/copy_ponder/deaab117-4677-4d40-85cb-14b8fc7d0506/sharpness_formal/sharpness_raw.csv
+Summary:     ../models/nope_baselines/copy_ponder/deaab117-4677-4d40-85cb-14b8fc7d0506/sharpness_formal/sharpness_summary.csv
+Plot:        ../models/nope_baselines/copy_ponder/deaab117-4677-4d40-85cb-14b8fc7d0506/sharpness_formal/sharpness_delta_objective.png
+
+[DONE] nope
+summary: ../models/nope_baselines/copy_ponder/deaab117-4677-4d40-85cb-14b8fc7d0506/sharpness_formal/sharpness_summary.csv
+raw:     ../models/nope_baselines/copy_ponder/deaab117-4677-4d40-85cb-14b8fc7d0506/sharpness_formal/sharpness_raw.csv
+plot:    ../models/nope_baselines/copy_ponder/deaab117-4677-4d40-85cb-14b8fc7d0506/sharpness_formal/sharpness_delta_objective.png
+
+======================================
+Running rope
+run_dir: ../models/rope_baselines/copy_ponder/85c8ce6d-4abc-4432-a343-739683bc4bf7
+out_dir: ../models/rope_baselines/copy_ponder/85c8ce6d-4abc-4432-a343-739683bc4bf7/sharpness_formal
+log: ../eval/copy_ponder_sharpness_logs/rope_20260528_011505.log
+======================================
+Evaluating epsilon=0.0001
+Evaluating epsilon=0.0003
+Evaluating epsilon=0.001
+Evaluating epsilon=0.003
+Evaluating epsilon=0.01
+Done.
+Raw results: ../models/rope_baselines/copy_ponder/85c8ce6d-4abc-4432-a343-739683bc4bf7/sharpness_formal/sharpness_raw.csv
+Summary:     ../models/rope_baselines/copy_ponder/85c8ce6d-4abc-4432-a343-739683bc4bf7/sharpness_formal/sharpness_summary.csv
+Plot:        ../models/rope_baselines/copy_ponder/85c8ce6d-4abc-4432-a343-739683bc4bf7/sharpness_formal/sharpness_delta_objective.png
+
+[DONE] rope
+summary: ../models/rope_baselines/copy_ponder/85c8ce6d-4abc-4432-a343-739683bc4bf7/sharpness_formal/sharpness_summary.csv
+raw:     ../models/rope_baselines/copy_ponder/85c8ce6d-4abc-4432-a343-739683bc4bf7/sharpness_formal/sharpness_raw.csv
+plot:    ../models/rope_baselines/copy_ponder/85c8ce6d-4abc-4432-a343-739683bc4bf7/sharpness_formal/sharpness_delta_objective.png
+
+======================================
+All sharpness evaluations finished.
+Logs saved to: ../eval/copy_ponder_sharpness_logs
+======================================
